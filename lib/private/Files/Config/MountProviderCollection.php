@@ -79,9 +79,48 @@ class MountProviderCollection implements IMountProviderCollection, Emitter {
 		$mounts = \array_filter($mounts, function ($result) {
 			return \is_array($result);
 		});
-		return \array_reduce($mounts, function (array $mounts, array $providerMounts) {
+		$cleanedMounts = \array_reduce($mounts, function (array $mounts, array $providerMounts) {
 			return \array_merge($mounts, $providerMounts);
 		}, []);
+
+		$takenMountPointNames = [];
+		foreach ($cleanedMounts as $mount) {
+			/** @var \OC\Files\Mount\MountPoint $mount */
+			$mountPointName = $mount->getMountPoint();
+			$updated = false;
+			while (\in_array($mountPointName, $takenMountPointNames)) {
+				$mountPointName = $this->adjustMountPointName($mountPointName);
+				$updated = true;
+			}
+
+			$takenMountPointNames[] = $mountPointName;
+			if ($updated) {
+				$mount->moveMount($mountPointName);
+			}
+		}
+
+		return $cleanedMounts;
+	}
+
+	/**
+	 * @param string $mountPointName
+	 *
+	 * @return string
+	 */
+	private function adjustMountPointName($mountPointName) {
+		$data = \pathinfo($mountPointName);
+		$data['dirname'] = $data['dirname'] ?? '';
+		$data['extension'] = $data['extension'] ?? '';
+
+		\preg_match_all('#(?<before>.*)\((?<postfix>\d+)\)$#', $data['filename'], $matches);
+		if (isset($matches['postfix'][0])) {
+			$increment = "(" . \strval($matches['postfix'][0] + 1) . ")";
+			$newName = "/" . $matches['before'][0] . $increment;
+		} else {
+			$newName = "/" . $data['filename'] . " (2)";
+		}
+
+		return $data['dirname'] . $newName . $data['extension'];
 	}
 
 	/**
