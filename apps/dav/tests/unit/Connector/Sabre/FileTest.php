@@ -477,6 +477,34 @@ class FileTest extends TestCase {
 		$this->assertEquals('file.aftercreate', $calledAfterEvent[0]);
 	}
 
+	/**
+	 * @expectedException \Sabre\DAV\Exception\BadRequest
+	 */
+	public function testPutSingleFileWrongChecksum() {
+		$request = new \OC\AppFramework\Http\Request([
+				'server' => [
+						'HTTP_OC_CHECKSUM' => 'abcd33221234def',
+				]
+		], null, $this->config, null);
+		$file = 'foo.txt';
+		$this->doPut($file, null, $request);
+	}
+
+	/**
+	 * @expectedException \Sabre\DAV\Exception\BadRequest
+	 */
+	public function testChunkedPutFileWrongChecksum() {
+		$request = new \OC\AppFramework\Http\Request([
+				'server' => [
+						'HTTP_OC_CHECKSUM' => 'abcd33221234def',
+				]
+		], null, $this->config, null);
+		$_SERVER['HTTP_OC_CHUNKED'] = true;
+
+		$this->doPut('/test.txt-chunking-12345-2-0', null, $request);
+		$this->doPut('/test.txt-chunking-12345-2-1', null, $request);
+	}
+
 	public function legalMtimeProvider() {
 		return [
 			"string" => [
