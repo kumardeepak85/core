@@ -21,7 +21,13 @@
  */
 namespace TestHelpers;
 
+use Codeception\Module\Cli;
 use GuzzleHttp\Message\ResponseInterface;
+use GuzzleHttp\Batch\Batch;
+use GuzzleHttp\BatchRequestTransfer;
+
+use GuzzleHttp\Client;
+use GuzzleHttp\Pool;
 
 /**
  * Helper to make requests to the OCS API
@@ -52,5 +58,25 @@ class OcsApiHelper {
 		$fullUrl .= "ocs/v{$ocsApiVersion}.php" . $path;
 
 		return HttpRequestHelper::sendRequest($fullUrl, $method, $user, $password, $headers, $body);
+	}
+
+	public static function sendBatchRequest(
+		$baseUrl, $user, $password, $method, $path, $body = [], $ocsApiVersion = 2, $headers = []
+	) {
+		$client = new Client();
+		$fullUrl = $baseUrl;
+		if (\substr($fullUrl, -1) !== '/') {
+			$fullUrl .= '/';
+		}
+		$fullUrl .= "ocs/v{$ocsApiVersion}.php" . $path;
+		$requests = [];
+		foreach ($body as $b) {
+			var_dump($b);
+			$request = HttpRequestHelper::createRequest($fullUrl, $method, $user, $password, $headers, $b);
+			array_push($requests, $request);
+		}
+		$responses = Pool::batch($client, $requests);
+		var_dump($responses->getResult($requests[0]));
+		return $responses;
 	}
 }

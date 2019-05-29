@@ -266,36 +266,24 @@ trait Provisioning {
 	 * @throws \Exception
 	 */
 	public function theseUsersHaveBeenCreated($setDefaultAttributes, $doNotInitialize, TableNode $table) {
+		var_dump($table->getColumnsHash());
+		$table = $table->getColumnsHash();
+		$bodies = [];
 		foreach ($table as $row) {
-			if (isset($row['displayname'])) {
-				$displayName = $row['displayname'];
-			} else {
-				$displayName = null;
-			}
-
-			if (isset($row['email'])) {
-				$email = $row['email'];
-			} else {
-				$email = null;
-			}
-
-			if (isset($row['password'])) {
-				$password = $this->getActualPassword($row['password']);
-			} else {
-				// Let createUser() select the password
-				$password = null;
-			}
-
-			$this->createUser(
-				$row ['username'],
-				$password,
-				$displayName,
-				$email,
-				($doNotInitialize === ""),
-				null,
-				!($setDefaultAttributes === "")
-			);
+			$body = [];
+			$body['userid'] = $this->getActualUsername($row['username']);
+			$body['password'] = $this->getPasswordForUser($row['username']);
+			var_dump($body);
+			array_push($bodies, $body);
 		}
+		$responses = OcsApiHelper::sendBatchRequest(
+			$this->getBaseUrl(),
+			$this->getAdminUsername(),
+			$this->getAdminPassword(),
+			"POST",
+			"/cloud/users",
+			$bodies
+		);
 	}
 
 	/**

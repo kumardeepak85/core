@@ -68,7 +68,57 @@ class HttpRequestHelper {
 		if ($client === null) {
 			$client = new Client();
 		}
+		$request = self::createRequest(
+			$url,
+			$method,
+			$user,
+			$password,
+			$headers,
+			$body,
+			$config,
+			$cookies,
+			$stream,
+			$timeout,
+			$client
+		);
 
+		try {
+			$response = $client->send($request);
+		} catch (BadResponseException $ex) {
+			$response = $ex->getResponse();
+			
+			//if the response was null for some reason do not return it but re-throw
+			if ($response === null) {
+				throw $ex;
+			}
+		}
+		return $response;
+	}
+
+	public static function sendRequestBatch($requests, $client = null) {
+		if ($client === null) {
+			$client = new Client();
+
+			$client->send($requests);
+		}
+	}
+
+	public static function createRequest(
+		$url,
+		$method = 'GET',
+	    $user = null,
+	    $password = null,
+	    $headers = null,
+	    $body = null,
+	    $config = null,
+	    $cookies = null,
+	    $stream = false,
+	    $timeout = 0,
+		$client = null
+	) {
+		if ($client === null) {
+			$client = new Client();
+		}
 		$options = [];
 		if ($user !== null) {
 			$options['auth'] = [$user, $password];
@@ -95,18 +145,7 @@ class HttpRequestHelper {
 				}
 			}
 		}
-
-		try {
-			$response = $client->send($request);
-		} catch (BadResponseException $ex) {
-			$response = $ex->getResponse();
-			
-			//if the response was null for some reason do not return it but re-throw
-			if ($response === null) {
-				throw $ex;
-			}
-		}
-		return $response;
+		return $request;
 	}
 
 	/**

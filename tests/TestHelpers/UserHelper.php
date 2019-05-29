@@ -77,6 +77,13 @@ class UserHelper {
 		return $return;
 	}
 
+	public static function createUserBatch($baseUrl, $body, $adminUser, $adminPassword) {
+		$return = [];
+		$return[] = OcsApiHelper::sendRequest(
+			$baseUrl, $adminUser, $adminPassword, "POST", "/cloud/users", $body
+		);
+	}
+
 	/**
 	 *
 	 * @param string $baseUrl
