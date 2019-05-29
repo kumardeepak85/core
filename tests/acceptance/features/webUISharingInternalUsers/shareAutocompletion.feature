@@ -9,9 +9,11 @@ Feature: Autocompletion of share-with names
     Given these users have been created with default attributes but not initialized:
       | username    |
       | user1       |
-      | user3       |
-      | usergrp     |
       | regularuser |
+    And these users have been created with default attributes and without skeleton files:
+      | username |
+      | user3    |
+      | usergrp  |
     # Some extra users to make the share autocompletion interesting
     Given these users have been created but not initialized:
       | username  | password  | displayname     | email          |
@@ -169,7 +171,7 @@ Feature: Autocompletion of share-with names
 
   @skipOnLDAP
   Scenario: autocompletion of a pattern where the name of existing users contain the pattern at the end
-    Given user "usergrp" has logged in using the webUI
+    Given user "regularuser" has logged in using the webUI
     And the user has browsed to the files page
     And the user has opened the share dialog for folder "simple-folder"
     When the user types "r3" in the share-with-field
